@@ -2,12 +2,14 @@ from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework import status
 
 from .models import Product
 from .models import Order
 from .models import OrderItem
 
 import logging
+import json 
 
 
 def banners_list_api(request):
@@ -65,14 +67,27 @@ def product_list_api(request):
 @api_view(['POST'])
 def register_order(request):
     try:
-        payload = request.body.decode()
+        payload = request.data
+
         order = Order.objects.create(
             first_name=payload.get('firstname'),
             last_name=payload.get('lastname') if payload.get('lastname') else '',
             phone_number=payload.get('phonenumber'),
             address=payload.get('address')
         )
+
         raw_products = payload.get('products', [])
+        if isinstance(raw_products, str):
+            return Response(
+                {"error: List was expected with values, but 'str' ​​was obtained"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+        elif not raw_products:
+            return Response(
+                {"error: This list cannot be empty"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
         for product_item in raw_products:
             product_id = int(product_item['product'])
             product = Product.objects.get(id=product_id)
