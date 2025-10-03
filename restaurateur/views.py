@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
-
+from foodcartapp.models import OrderItem
 from foodcartapp.models import Product, Restaurant
 
 
@@ -92,6 +92,7 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
+    order_items = OrderItem.objects.select_related('order', 'product')
     return render(request, template_name='order_items.html', context={
-        # TODO заглушка для нереализованного функционала
+        'order_items': order_items
     })
