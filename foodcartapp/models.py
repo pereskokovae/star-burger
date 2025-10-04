@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-
+from django.db.models import F
 
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -155,6 +155,13 @@ class Order(models.Model):
         return self.firstname
 
 
+class OrderItemQuerySet(models.QuerySet):
+    def total_price(self):
+        return self.annotate(
+            total_price=F('quantity') * F('product__price')
+        ).select_related('order')
+
+
 class OrderItem(models.Model):
     product = models.ForeignKey(
         Product,
@@ -168,6 +175,9 @@ class OrderItem(models.Model):
         related_name='orders',
         verbose_name='заказ'
     )
+    quantity = models.PositiveIntegerField('количество', default=0)
+
+    objects = OrderItemQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'элемент заказа'
