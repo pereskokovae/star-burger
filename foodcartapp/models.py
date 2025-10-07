@@ -158,7 +158,7 @@ class Order(models.Model):
 class OrderItemQuerySet(models.QuerySet):
     def total_price(self):
         return self.annotate(
-            total_price=F('quantity') * F('product__price')
+            total_price=F('quantity') * F('price')
         ).select_related('order')
 
 
@@ -175,7 +175,13 @@ class OrderItem(models.Model):
         related_name='orders',
         verbose_name='заказ'
     )
-    quantity = models.PositiveIntegerField('количество', default=0)
+    quantity = models.PositiveIntegerField('количество', default=1)
+    price = models.DecimalField(
+        'цена',
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+        )
 
     objects = OrderItemQuerySet.as_manager()
 
