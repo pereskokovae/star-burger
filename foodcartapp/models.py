@@ -127,6 +127,13 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
+    STATUS_CHOICES = {
+        "not_processed": "Не обработан",
+        "in_assembly": "В сборке",
+        "delivering": "Передан в доставку",
+        "delivered": "Доставлен"
+    }
+
     firstname = models.CharField(
         'имя',
         max_length=40
@@ -145,6 +152,13 @@ class Order(models.Model):
     address = models.CharField(
         'адрес доставки',
         max_length=100
+    )
+    status = models.CharField(
+        'статус заказа',
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='not_processed',
+        db_index=True
     )
 
     class Meta:
@@ -180,7 +194,7 @@ class OrderItem(models.Model):
         'цена',
         max_digits=8,
         decimal_places=2,
-        validators=[MinValueValidator(0)]
+        validators=[MinValueValidator(0)],
         )
 
     objects = OrderItemQuerySet.as_manager()
