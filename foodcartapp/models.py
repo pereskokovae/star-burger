@@ -168,17 +168,20 @@ class Order(models.Model):
     )
     registrated_at = models.DateTimeField(
         'создан в',
-        default=timezone.now
+        default=timezone.now,
+        db_index=True
     )
     called_at = models.DateTimeField(
         'обработан в',
         null=True,
-        blank=True
+        blank=True,
+        db_index=True
     )
     delivered_at = models.DateTimeField(
         'доставлен в',
         null=True,
-        blank=True
+        blank=True,
+        db_index=True
     )
 
     class Meta:
