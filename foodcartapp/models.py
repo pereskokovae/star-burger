@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.db.models import F
 
@@ -162,6 +163,20 @@ class Order(models.Model):
     )
     comment = models.TextField(
         'комментарий к заказу',
+        null=True,
+        blank=True
+    )
+    registrated_at = models.DateTimeField(
+        'создан в',
+        default=timezone.now
+    )
+    called_at = models.DateTimeField(
+        'обработан в',
+        null=True,
+        blank=True
+    )
+    delivered_at = models.DateTimeField(
+        'доставлен в',
         null=True,
         blank=True
     )
