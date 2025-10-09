@@ -134,6 +134,10 @@ class Order(models.Model):
         "delivering": "Передан в доставку",
         "delivered": "Доставлен"
     }
+    PAYMENT_COICES = {
+        "cash": "наличный",
+        "cashless": "безналичный"
+    }
 
     firstname = models.CharField(
         'имя',
@@ -181,6 +185,13 @@ class Order(models.Model):
         'доставлен в',
         null=True,
         blank=True,
+        db_index=True
+    )
+
+    payment = models.CharField(
+        'способ оплаты',
+        choices=PAYMENT_COICES,
+        default='cash',
         db_index=True
     )
 
