@@ -160,6 +160,11 @@ class Order(models.Model):
         default='not_processed',
         db_index=True
     )
+    comment = models.TextField(
+        'комментарий к заказу',
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = 'заказ'
