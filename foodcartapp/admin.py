@@ -118,6 +118,11 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ['firstname', 'lastname', 'address']
     inlines = [OrderItemInline]
 
+    def save_model(self, request, obj, form, change):
+        if change and obj.status == 'not_processed':
+            obj.status = 'in_assembly'
+        return super().save_model(request, obj, form, change)
+
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
         if "next" in request.GET:
