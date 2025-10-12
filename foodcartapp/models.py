@@ -127,6 +127,13 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 
+class OrderQuerySet(models.QuerySet):
+    def with_total_price(self):
+        return self.annotate(
+            total_price=F('items__quantity') * F('items__price')
+        )
+
+
 class Order(models.Model):
     STATUS_CHOICES = {
         "not_processed": "Не обработан",
@@ -134,7 +141,7 @@ class Order(models.Model):
         "delivering": "Передан в доставку",
         "delivered": "Доставлен"
     }
-    PAYMENT_COICES = {
+    PAYMENT_CHOICES = {
         "cash": "наличный",
         "cashless": "безналичный"
     }
@@ -190,10 +197,11 @@ class Order(models.Model):
 
     payment = models.CharField(
         'способ оплаты',
-        choices=PAYMENT_COICES,
+        choices=PAYMENT_CHOICES,
         default='cash',
         db_index=True
     )
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'заказ'
@@ -203,24 +211,17 @@ class Order(models.Model):
         return self.firstname
 
 
-class OrderItemQuerySet(models.QuerySet):
-    def total_price(self):
-        return self.annotate(
-            total_price=F('quantity') * F('price')
-        ).select_related('order')
-
-
 class OrderItem(models.Model):
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
-        related_name='products',
+        related_name='order_items',
         verbose_name='товар',
     )
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
-        related_name='orders',
+        related_name='items',
         verbose_name='заказ'
     )
     quantity = models.PositiveIntegerField('количество', default=1)
@@ -230,8 +231,13 @@ class OrderItem(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0)],
         )
-
-    objects = OrderItemQuerySet.as_manager()
+    restaurant = models.ForeignKey(
+        RestaurantMenuItem,
+        on_delete=models.CASCADE,
+        verbose_name='кто приготовит',
+        related_name='restaurants',
+        null=True
+        )
 
     class Meta:
         verbose_name = 'элемент заказа'

@@ -24,21 +24,19 @@
       <th>Ссылка на админку</th>
     </tr>
 
-    {% for item in order_items %}
+    {% for order in orders %}
       <tr>
-        {% if item.order.status == 'not_processed' %}
-          <td>{{ item.id }}</td>
-          <td>Необработанный</td>
-          {% if item.order.payment == 'cash' %}<td>Наличный</td>{% else %}<td>Безналичный</td>{% endif %}
-          <td>{{ item.total_price }}</td>
-          <td>{{ item.order.firstname }}</td>
-          <td>{{ item.order.phonenumber }}</td>
-          <td>{{ item.order.address }}</td>
-          {% if item.order.comment %}<td>{{ item.order.comment }}</td>{% else %}<td></td>{% endif %}
-          <td>
-            <a href="{% url 'admin:foodcartapp_order_change' object_id=item.id %}?next={{ '/manager/orders'|urlencode }}">Редактировать</a>
-          </td>
-        {% endif %}
+        <td>{{ order.id }}</td>
+        {% if order.status == 'not_processed' %}<td>Необработанный</td>{% else %}<td>Готовиться</td>{% endif %}
+        {% if order.payment == 'cash' %}<td>Наличный</td>{% else %}<td>Безналичный</td>{% endif %}
+        <td>{{ order.total_price }}</td>
+        <td>{{ order.firstname }}</td>
+        <td>{{ order.phonenumber }}</td>
+        <td>{{ order.address }}</td>
+        {% if order.comment %}<td>{{ order.comment }}</td>{% else %}<td></td>{% endif %}
+        <td>
+          <a href="{% url 'admin:foodcartapp_order_change' object_id=order.id %}?next={{ '/manager/orders'|urlencode }}">Редактировать</a>
+        </td>
       </tr>
     {% endfor %}
    </table>
