@@ -206,6 +206,7 @@ class Order(models.Model):
     class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
+        ordering = ['-status']
 
     def __str__(self):
         return self.firstname
@@ -235,7 +236,7 @@ class OrderItem(models.Model):
         RestaurantMenuItem,
         on_delete=models.CASCADE,
         verbose_name='кто приготовит',
-        related_name='restaurants',
+        related_name='menu_items',
         null=True
         )
 

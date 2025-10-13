@@ -1,3 +1,6 @@
+import requests
+from rest_framework import status
+
 from django import forms
 from django.shortcuts import redirect, render
 from django.views import View
@@ -8,6 +11,10 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 from foodcartapp.models import Order, Product, Restaurant, RestaurantMenuItem
+
+from geopy import distance
+
+from environs import Env
 
 
 class Login(forms.Form):
@@ -89,8 +96,29 @@ def view_restaurants(request):
     })
 
 
+def fetch_coordinates(apikey, address):
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+
+    if not found_places:
+        return None
+
+    most_relevant = found_places[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+    return lon, lat
+
+
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
+    env = Env()
+    env.read_env()
+
     orders = Order.objects.with_total_price().prefetch_related(
         'items__product',
         'items__restaurant'
@@ -101,14 +129,31 @@ def view_orders(request):
             if item.restaurant:
                 item.selected_restaurant = item.restaurant.restaurant.name
                 item.available_restaurants = []
+
             else:
+                item.selected_restaurant = None
                 menu_items = RestaurantMenuItem.objects.filter(
                     product=item.product,
                     availability=True
                 ).select_related('restaurant')
-                item.available_restaurants = [
-                    menu_item.restaurant.name for menu_item in menu_items
-                ]
-                item.selected_restaurant = None
+                for menu_item in menu_items:
+                    address = menu_item.restaurant.address
+
+                    client_address = list(fetch_coordinates(
+                        env('API_YANDEX_KEY'),
+                        order.address
+                    ))
+                    restaurant_address = list(fetch_coordinates(
+                        env('API_YANDEX_KEY'),
+                        address
+                    ))
+                    distance_to_restaurant = (distance.distance(
+                        client_address,
+                        restaurant_address
+                    ).km)
+
+                    item.available_restaurants = [
+                        f'{menu_item.restaurant.name} - {distance_to_restaurant}'
+                    ]
 
     return render(request, 'order_items.html', {'orders': orders})
