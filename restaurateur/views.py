@@ -1,20 +1,18 @@
-import requests
-from rest_framework import status
-
 from django import forms
 from django.shortcuts import redirect, render
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
-
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
+
+from places.views import fetch_coordinates
 
 from foodcartapp.models import Order, Product, Restaurant, RestaurantMenuItem
 
 from geopy import distance
 
-from environs import Env
+from django.conf import settings
 
 
 class Login(forms.Form):
@@ -96,29 +94,8 @@ def view_restaurants(request):
     })
 
 
-def fetch_coordinates(apikey, address):
-    base_url = "https://geocode-maps.yandex.ru/1.x"
-    response = requests.get(base_url, params={
-        "geocode": address,
-        "apikey": apikey,
-        "format": "json",
-    })
-    response.raise_for_status()
-    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
-
-    if not found_places:
-        return None
-
-    most_relevant = found_places[0]
-    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
-    return lon, lat
-
-
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    env = Env()
-    env.read_env()
-
     orders = Order.objects.with_total_price().prefetch_related(
         'items__product',
         'items__restaurant'
@@ -140,11 +117,11 @@ def view_orders(request):
                     address = menu_item.restaurant.address
 
                     client_address = list(fetch_coordinates(
-                        env('API_YANDEX_KEY'),
+                        settings.YANDEX_API_KEY,
                         order.address
                     ))
                     restaurant_address = list(fetch_coordinates(
-                        env('API_YANDEX_KEY'),
+                        settings.YANDEX_API_KEY,
                         address
                     ))
                     distance_to_restaurant = (distance.distance(
