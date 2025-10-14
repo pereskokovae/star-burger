@@ -152,13 +152,12 @@ class Order(models.Model):
     )
     lastname = models.CharField(
         'фамилия',
-        max_length=40,
-        blank=True
+        max_length=40
     )
     phonenumber = PhoneNumberField(
         'мобильный номер',
         region='RU',
-        null=True
+        db_index=True
     )
     address = models.CharField(
         'адрес доставки',
@@ -196,7 +195,6 @@ class Order(models.Model):
     payment = models.CharField(
         'способ оплаты',
         choices=PAYMENT_CHOICES,
-        default='cash',
         db_index=True
     )
     objects = OrderQuerySet.as_manager()
