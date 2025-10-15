@@ -100,36 +100,38 @@ def view_orders(request):
         'items__product').select_related('restaurant')
 
     for order in orders:
-        if not order.restaurant:
-            product_ids = order.items.values_list('product_id', flat=True)
-            aviable_restaurants = Restaurant.objects.filter(
-                menu_items__product_id__in=product_ids,
-                menu_items__availability=True
-            )
-      
-            for aviable_restaurant in aviable_restaurants:
-                address = aviable_restaurant.address
+        if order.status in ['not_processed', 'in_assembly']:
+            if not order.restaurant:
+                product_ids = order.items.values_list('product_id', flat=True)
+                aviable_restaurants = Restaurant.objects.filter(
+                    menu_items__product_id__in=product_ids,
+                    menu_items__availability=True
+                )
 
-                client_address = list(fetch_coordinates(
-                    settings.YANDEX_API_KEY,
-                    order.address
-                ))
+                for aviable_restaurant in aviable_restaurants:
+                    address = aviable_restaurant.address
 
-                restaurant_address = list(fetch_coordinates(
-                    settings.YANDEX_API_KEY,
-                    address
-                ))
-                try:
-                    distance_to_restaurant = (distance.distance(
-                        client_address,
-                        restaurant_address
-                    ).km)
-                except Exception:
-                    order.aviable_restaurants = f'Адрес не найден'
-                    continue
+                    client_address = list(fetch_coordinates(
+                        settings.YANDEX_API_KEY,
+                        order.address
+                    ))
 
-                order.available_restaurants = [
-                    f'{aviable_restaurant.name} - {distance_to_restaurant} км'
-                    ]
+                    restaurant_address = list(fetch_coordinates(
+                        settings.YANDEX_API_KEY,
+                        address
+                    ))
+                    try:
+                        distance_to_restaurant = (distance.distance(
+                            client_address,
+                            restaurant_address
+                        ).km)
+                    except Exception:
+                        order.aviable_restaurants = f'Адрес не найден'
+                        continue
 
+                    order.available_restaurants = [
+                        f'{aviable_restaurant.name} - {round(distance_to_restaurant, 2)} км'
+                        ]
+        else:
+            continue
     return render(request, 'order_items.html', {'orders': orders})

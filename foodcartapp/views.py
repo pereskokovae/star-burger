@@ -79,8 +79,8 @@ def register_order(request):
     order_items = []
     for products_fields in validated_data['products']:
         product = products_fields['product']
+        quantity = products_fields['quantity']
         price = product.price
-        quantity = product.quantity
 
         order_item = OrderItem(
             order=order,
