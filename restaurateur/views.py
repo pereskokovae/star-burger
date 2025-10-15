@@ -97,40 +97,39 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = Order.objects.with_total_price().prefetch_related(
-        'items__product',
-        'items__restaurant'
-    )
+        'items__product').select_related('restaurant')
 
     for order in orders:
-        for item in order.items.all():
-            if item.restaurant:
-                item.selected_restaurant = item.restaurant.restaurant.name
-                item.available_restaurants = []
+        if not order.restaurant:
+            product_ids = order.items.values_list('product_id', flat=True)
+            aviable_restaurants = Restaurant.objects.filter(
+                menu_items__product_id__in=product_ids,
+                menu_items__availability=True
+            )
+      
+            for aviable_restaurant in aviable_restaurants:
+                address = aviable_restaurant.address
 
-            else:
-                item.selected_restaurant = None
-                menu_items = RestaurantMenuItem.objects.filter(
-                    product=item.product,
-                    availability=True
-                ).select_related('restaurant')
-                for menu_item in menu_items:
-                    address = menu_item.restaurant.address
+                client_address = list(fetch_coordinates(
+                    settings.YANDEX_API_KEY,
+                    order.address
+                ))
 
-                    client_address = list(fetch_coordinates(
-                        settings.YANDEX_API_KEY,
-                        order.address
-                    ))
-                    restaurant_address = list(fetch_coordinates(
-                        settings.YANDEX_API_KEY,
-                        address
-                    ))
+                restaurant_address = list(fetch_coordinates(
+                    settings.YANDEX_API_KEY,
+                    address
+                ))
+                try:
                     distance_to_restaurant = (distance.distance(
                         client_address,
                         restaurant_address
                     ).km)
+                except Exception:
+                    order.aviable_restaurants = f'Адрес не найден'
+                    continue
 
-                    item.available_restaurants = [
-                        f'{menu_item.restaurant.name} - {distance_to_restaurant}'
+                order.available_restaurants = [
+                    f'{aviable_restaurant.name} - {distance_to_restaurant} км'
                     ]
 
     return render(request, 'order_items.html', {'orders': orders})

@@ -30,9 +30,9 @@ def fetch_coordinates(apikey, address):
     Place.objects.update_or_create(
         address=address,
         defaults={
-            'longitude': lon,
             'latitude': lat,
+            'longitude': lon,
             'updated_at': timezone.now
         }
     )
-    return lon, lat
+    return lat, lon

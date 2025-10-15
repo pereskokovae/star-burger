@@ -36,26 +36,25 @@
         <td>{{ order.address }}</td>
         {% if order.comment %}<td>{{ order.comment }}</td>{% else %}<td></td>{% endif %}
         <td>
-          {% for item in order.items.all %}
-            {% if item.selected_restaurant %}
-              <details>
-                <summary>Готовит ресторан:</summary>
-                <ul>
-                  <li>{{ item.selected_restaurant }}</li>
-                </ul>
-              </details>
-            {% elif item.available_restaurants %}
-              <details>
-                <summary>Может быть приготовлен ресторанами:</summary>
-                <ul>
-                  {% for available_restaurant in item.available_restaurants %}
-                    <li>{{ available_restaurant }}</li>
-                  {% endfor %}
-                </ul>
-              </details>
-            {% endif %}
-          {% endfor %}
-        </td>
+
+          {% if order.restaurant %}
+            <details>
+              <summary>Готовит ресторан:</summary>
+              <ul>
+                <li>{{ order.restaurant.name }}</li>
+              </ul>
+            </details>
+          {% elif order.available_restaurants %}
+            <details>
+              <summary>Может быть приготовлен ресторанами:</summary>
+              <ul>
+                {% for available_restaurant in order.available_restaurants %}
+                  <li>{{ available_restaurant }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+        {% endif %}
+      </td>
         <td>
           <a href="{% url 'admin:foodcartapp_order_change' object_id=order.id %}?next={{ '/manager/orders'|urlencode }}">Редактировать</a>
         </td>

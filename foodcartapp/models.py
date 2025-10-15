@@ -197,6 +197,13 @@ class Order(models.Model):
         choices=PAYMENT_CHOICES,
         db_index=True
     )
+    restaurant = models.ForeignKey(
+        Restaurant,
+        on_delete=models.CASCADE,
+        verbose_name='кто приготовит',
+        related_name='orders',
+        null=True
+        )
     objects = OrderQuerySet.as_manager()
 
     class Meta:
@@ -227,13 +234,6 @@ class OrderItem(models.Model):
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-        )
-    restaurant = models.ForeignKey(
-        RestaurantMenuItem,
-        on_delete=models.CASCADE,
-        verbose_name='кто приготовит',
-        related_name='menu_items',
-        null=True
         )
 
     class Meta:

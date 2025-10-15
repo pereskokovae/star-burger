@@ -80,10 +80,12 @@ def register_order(request):
     for products_fields in validated_data['products']:
         product = products_fields['product']
         price = product.price
+        quantity = product.quantity
 
         order_item = OrderItem(
             order=order,
             product=product,
+            quantity=quantity,
             price=price,
         )
         order_items.append(order_item)
