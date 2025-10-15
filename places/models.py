@@ -9,8 +9,14 @@ class Place(models.Model):
         blank=True,
         unique=True
     )
-    latitude = models.FloatField('широта')
-    longitude = models.FloatField('долгота')
+    latitude = models.FloatField(
+        'широта',
+        blank=True
+        )
+    longitude = models.FloatField(
+        'долгота',
+        blank=True
+        )
     updated_at = models.DateTimeField(
         'обновлен в',
         default=timezone.now,
