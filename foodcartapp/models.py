@@ -133,6 +133,19 @@ class OrderQuerySet(models.QuerySet):
             total_price=F('items__quantity') * F('items__price')
         )
 
+    def with_available_restaurants(self):
+        menu_items = RestaurantMenuItem.objects.filter(
+            availability=True
+        ).select_related('restaurant', 'product')
+
+        restaurant_names = menu_items.values_list(
+            'restaurant__name', flat=True
+        )
+        available_restaurants = Restaurant.objects.filter(
+            name__in=restaurant_names
+        )
+        return available_restaurants
+
 
 class Order(models.Model):
     STATUS_CHOICES = {

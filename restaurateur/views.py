@@ -96,44 +96,40 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.with_total_price().prefetch_related(
-        'items__product').select_related('restaurant')
+    orders = Order.objects.with_total_price().filter(
+            status__in=['not_processed', 'in_assembly']
+        ).prefetch_related('items__product').select_related('restaurant')
 
     for order in orders:
-        if order.status in ['not_processed', 'in_assembly']:
-            if not order.restaurant:
-                product_ids = order.items.values_list('product_id', flat=True)
-                aviable_restaurants = Restaurant.objects.filter(
-                    menu_items__product_id__in=product_ids,
-                    menu_items__availability=True
-                )
+        if not order.restaurant:
+            available_restaurants = order.with_available_restaurants()
 
-                for aviable_restaurant in aviable_restaurants:
-                    address = aviable_restaurant.address
+            for available_restaurant in available_restaurants:
+                address = available_restaurant.address
 
-                    try:
-                        client_address = list(fetch_coordinates(
-                            settings.YANDEX_API_KEY,
-                            order.address
-                        ))
-                    except requests.exceptions.HTTPError as e:
-                        if e.response.status_code == 400:
-                            order.aviable_restaurants = 'Адрес не найден'
-                        continue
-
-                    restaurant_address = list(fetch_coordinates(
+                try:
+                    client_address = list(fetch_coordinates(
                         settings.YANDEX_API_KEY,
-                        address
+                        order.address
                     ))
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 400:
+                        order.available_restaurants = 'Адрес не найден'
+                    continue
 
-                    distance_to_restaurant = (distance.distance(
-                        client_address,
-                        restaurant_address
-                    ).km)
+                restaurant_address = list(fetch_coordinates(
+                    settings.YANDEX_API_KEY,
+                    address
+                ))
 
-                    order.available_restaurants = [
-                        f'{aviable_restaurant.name} - {round(distance_to_restaurant, 2)} км'
-                        ]
+                distance_to_restaurant = (distance.distance(
+                    client_address,
+                    restaurant_address
+                ).km)
+
+                order.available_restaurants = [
+                    f'{available_restaurants.name} - {round(distance_to_restaurant, 2)} км'
+                    ]
         else:
             continue
     return render(request, 'order_items.html', {'orders': orders})
