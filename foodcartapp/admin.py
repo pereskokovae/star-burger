@@ -124,8 +124,8 @@ class OrderAdmin(admin.ModelAdmin):
 
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
-        if url_has_allowed_host_and_scheme(request.GET['next'], None):
-            url = request.GET['next']
+        if "next" in request.GET:
+            url = url_has_allowed_host_and_scheme(request.GET['next'])
             return HttpResponseRedirect(url)
         else:
             return response
