@@ -11,7 +11,7 @@ from places.views import fetch_coordinates
 from foodcartapp.models import Order, Product, Restaurant, RestaurantMenuItem
 
 from geopy import distance
-
+import requests
 from django.conf import settings
 
 
@@ -111,23 +111,25 @@ def view_orders(request):
                 for aviable_restaurant in aviable_restaurants:
                     address = aviable_restaurant.address
 
-                    client_address = list(fetch_coordinates(
-                        settings.YANDEX_API_KEY,
-                        order.address
-                    ))
+                    try:
+                        client_address = list(fetch_coordinates(
+                            settings.YANDEX_API_KEY,
+                            order.address
+                        ))
+                    except requests.exceptions.HTTPError as e:
+                        if e.response.status_code == 400:
+                            order.aviable_restaurants = 'Адрес не найден'
+                        continue
 
                     restaurant_address = list(fetch_coordinates(
                         settings.YANDEX_API_KEY,
                         address
                     ))
-                    try:
-                        distance_to_restaurant = (distance.distance(
-                            client_address,
-                            restaurant_address
-                        ).km)
-                    except Exception:
-                        order.aviable_restaurants = f'Адрес не найден'
-                        continue
+
+                    distance_to_restaurant = (distance.distance(
+                        client_address,
+                        restaurant_address
+                    ).km)
 
                     order.available_restaurants = [
                         f'{aviable_restaurant.name} - {round(distance_to_restaurant, 2)} км'

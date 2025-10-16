@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from django.utils import timezone
 
-from requests.exceptions import HTTPError
 from places.models import Place
 
 import requests
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 def fetch_coordinates(apikey, address):
     place = Place.objects.filter(address=address).first()
@@ -16,16 +16,13 @@ def fetch_coordinates(apikey, address):
         return place.longitude, place.latitude
 
     base_url = "https://geocode-maps.yandex.ru/1.x"
-    try:
-        response = requests.get(base_url, params={
-            "geocode": address,
-            "apikey": apikey,
-            "format": "json",
-        })
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.warning(f"Http error while fetching coordinates for {address}, {e}")
-        raise
+
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
 
     found_places = response.json()['response']['GeoObjectCollection']['featureMember']
 
