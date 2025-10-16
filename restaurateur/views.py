@@ -5,14 +5,16 @@ from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
+from django.conf import settings
 
 from places.views import fetch_coordinates
 
-from foodcartapp.models import Order, Product, Restaurant, RestaurantMenuItem
+from foodcartapp.models import Order, Product, Restaurant
+from places.models import Place
 
 from geopy import distance
+
 import requests
-from django.conf import settings
 
 
 class Login(forms.Form):
@@ -104,32 +106,29 @@ def view_orders(request):
         if not order.restaurant:
             available_restaurants = order.with_available_restaurants()
 
-            for available_restaurant in available_restaurants:
-                address = available_restaurant.address
-
-                try:
-                    client_address = list(fetch_coordinates(
-                        settings.YANDEX_API_KEY,
-                        order.address
-                    ))
-                except requests.exceptions.HTTPError as e:
-                    if e.response.status_code == 400:
-                        order.available_restaurants = 'Адрес не найден'
-                    continue
-
-                restaurant_address = list(fetch_coordinates(
+            try:
+                client_address = list(fetch_coordinates(
                     settings.YANDEX_API_KEY,
-                    address
+                    order.address
                 ))
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 400:
+                    order.available_restaurants = 'Адрес не найден'
+                continue
 
-                distance_to_restaurant = (distance.distance(
-                    client_address,
-                    restaurant_address
-                ).km)
+            restaurant_address = list(fetch_coordinates(
+                settings.YANDEX_API_KEY,
+                Place.objects.filter(address__in=available_restaurants.address)
+            ))
 
-                order.available_restaurants = [
-                    f'{available_restaurants.name} - {round(distance_to_restaurant, 2)} км'
-                    ]
+            distance_to_restaurant = (distance.distance(
+                client_address,
+                restaurant_address
+            ).km)
+
+            order.available_restaurants = [
+                f'{available_restaurants.name} - {round(distance_to_restaurant, 2)} км'
+                ]
         else:
             continue
     return render(request, 'order_items.html', {'orders': orders})
