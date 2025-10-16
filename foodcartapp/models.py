@@ -191,7 +191,6 @@ class Order(models.Model):
         blank=True,
         db_index=True
     )
-
     payment = models.CharField(
         'способ оплаты',
         choices=PAYMENT_CHOICES,
@@ -201,8 +200,7 @@ class Order(models.Model):
         Restaurant,
         on_delete=models.CASCADE,
         verbose_name='кто приготовит',
-        related_name='orders',
-        null=True
+        related_name='orders'
         )
     objects = OrderQuerySet.as_manager()
 
