@@ -104,7 +104,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductCategory)
-class ProductAdmin(admin.ModelAdmin):
+class ProductCategoryAdmin(admin.ModelAdmin):
     pass
 
 
@@ -124,8 +124,12 @@ class OrderAdmin(admin.ModelAdmin):
 
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
-        if "next" in request.GET:
-            url = url_has_allowed_host_and_scheme(request.GET['next'])
-            return HttpResponseRedirect(url)
+        next_url = request.GET.get('next')
+
+        if next_url and url_has_allowed_host_and_scheme(
+            request.GET['next'],
+            allowed_hosts=request.get_host()
+        ):
+            return HttpResponseRedirect(next_url)
         else:
             return response
