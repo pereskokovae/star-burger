@@ -142,7 +142,8 @@ class OrderQuerySet(models.QuerySet):
             'restaurant__name', flat=True
         )
         available_restaurants = Restaurant.objects.filter(
-            name__in=restaurant_names
+            name__in=restaurant_names,
+            orders=self
         )
         return available_restaurants
 
@@ -211,9 +212,11 @@ class Order(models.Model):
     )
     restaurant = models.ForeignKey(
         Restaurant,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name='кто приготовит',
-        related_name='orders'
+        related_name='orders',
+        null=True,
+        blank=True
         )
     objects = OrderQuerySet.as_manager()
 
