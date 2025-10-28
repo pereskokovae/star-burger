@@ -98,11 +98,16 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.with_available_restaurants().with_total_price().exclude(status='delivered').prefetch_related('items__product').select_related('restaurant')
-
+    orders = (
+        Order.objects.with_total_price().exclude(
+            status='delivered'
+            ).prefetch_related(
+                'items__product'
+            ).select_related(
+                'restaurant'
+            ).with_available_restaurants()
+    )
     for order in orders:
-        available_restaurants = order.available_restaurants()
-
         try:
             client_address = list(fetch_coordinates(
                     settings.YANDEX_API_KEY,
@@ -113,17 +118,15 @@ def view_orders(request):
                 order.available_restaurants = 'Адрес не найден'
             continue
 
-        restaurant_address = list(fetch_coordinates(
+        distances = []
+        for restaurant in order.available_restaurants:
+            restaurant_address = list(fetch_coordinates(
                 settings.YANDEX_API_KEY,
-                Place.objects.filter(address__in=available_restaurants.address)
+                restaurant.address
             ))
+            km = round(distance.distance(client_address, restaurant_address).km, 2)
+            distances.append(f"{restaurant.name} — {km} км")
 
-        distance_to_restaurant = (distance.distance(
-                client_address,
-                restaurant_address
-            ).km)
+        order.available_restaurants = distances
 
-        order.available_restaurants = [
-                f'{available_restaurants.name} - {round(distance_to_restaurant, 2)} км'
-                ]
     return render(request, 'order_items.html', {'orders': orders})
