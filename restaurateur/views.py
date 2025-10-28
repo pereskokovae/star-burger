@@ -98,37 +98,32 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.with_total_price().filter(
-            status__in=['not_processed', 'in_assembly']
-        ).prefetch_related('items__product').select_related('restaurant')
+    orders = Order.objects.with_available_restaurants().with_total_price().exclude(status='delivered').prefetch_related('items__product').select_related('restaurant')
 
     for order in orders:
-        if not order.restaurant:
-            available_restaurants = order.with_available_restaurants()
+        available_restaurants = order.available_restaurants()
 
-            try:
-                client_address = list(fetch_coordinates(
+        try:
+            client_address = list(fetch_coordinates(
                     settings.YANDEX_API_KEY,
                     order.address
                 ))
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 400:
-                    order.available_restaurants = 'Адрес не найден'
-                continue
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 400:
+                order.available_restaurants = 'Адрес не найден'
+            continue
 
-            restaurant_address = list(fetch_coordinates(
+        restaurant_address = list(fetch_coordinates(
                 settings.YANDEX_API_KEY,
                 Place.objects.filter(address__in=available_restaurants.address)
             ))
 
-            distance_to_restaurant = (distance.distance(
+        distance_to_restaurant = (distance.distance(
                 client_address,
                 restaurant_address
             ).km)
 
-            order.available_restaurants = [
+        order.available_restaurants = [
                 f'{available_restaurants.name} - {round(distance_to_restaurant, 2)} км'
                 ]
-        else:
-            continue
     return render(request, 'order_items.html', {'orders': orders})
