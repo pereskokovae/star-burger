@@ -5,16 +5,10 @@ from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-from django.conf import settings
 
-from places.views import fetch_coordinates
+from places.views import count_distance_to_restaurants
 
 from foodcartapp.models import Order, Product, Restaurant
-from places.models import Place
-
-from geopy import distance
-
-import requests
 
 
 class Login(forms.Form):
@@ -107,26 +101,6 @@ def view_orders(request):
                 'restaurant'
             ).with_available_restaurants()
     )
-    for order in orders:
-        try:
-            client_address = list(fetch_coordinates(
-                    settings.YANDEX_API_KEY,
-                    order.address
-                ))
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 400:
-                order.available_restaurants = 'Адрес не найден'
-            continue
-
-        distances = []
-        for restaurant in order.available_restaurants:
-            restaurant_address = list(fetch_coordinates(
-                settings.YANDEX_API_KEY,
-                restaurant.address
-            ))
-            km = round(distance.distance(client_address, restaurant_address).km, 2)
-            distances.append(f"{restaurant.name} — {km} км")
-
-        order.available_restaurants = distances
+    count_distance_to_restaurants(orders)
 
     return render(request, 'order_items.html', {'orders': orders})

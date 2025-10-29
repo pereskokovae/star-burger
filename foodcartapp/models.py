@@ -4,7 +4,6 @@ from django.core.validators import MinValueValidator
 from django.db.models import F
 
 from phonenumber_field.modelfields import PhoneNumberField
-from collections import defaultdict
 
 
 class Restaurant(models.Model):
@@ -139,17 +138,21 @@ class OrderQuerySet(models.QuerySet):
             availability=True
         ).select_related('restaurant', 'product')
 
-        restaurant_products = defaultdict(set)
+        restaurant_products = {}
         for item in menu_items:
-            restaurant_products.setdefault(item.restaurant, set()).add(item.product)
+            restaurant_products.setdefault(
+                item.restaurant, set()
+            ).add(item.product)
 
         for order in self:
-            ordered_products = set(order.items.values_list('product', flat=True))
+            ordered_products = {
+                order_product.product for order_product in order.items.all()
+                }
             available_restaurants = []
 
             for restaurant, products in restaurant_products.items():
                 if ordered_products.issubset(products):
-                    available_restaurants.append(restaurant.name)
+                    available_restaurants.append(restaurant)
 
             order.available_restaurants = available_restaurants
         return self
