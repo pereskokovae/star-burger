@@ -65,7 +65,7 @@ def count_distance_to_restaurants(orders):
     for order in orders:
         client_coords = address_coords.get(order.address)
         if not client_coords:
-            order.available_restaurants = "Адрес клиента не найден"
+            order.available_restaurants = []
             continue
 
         distances = []

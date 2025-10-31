@@ -44,7 +44,9 @@
                 <li>{{ order.restaurant.name }}</li>
               </ul>
             </details>
-          {% else %}
+          {% elif not order.available_restaurants %}
+            <details><ul>Адрес клиента не найден</ul></details>
+          {% elif order.available_restaurants %}
             <details>
               <summary>Может быть приготовлен ресторанами:</summary>
               <ul>
