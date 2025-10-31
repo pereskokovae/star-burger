@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
-from django.db.models import F
+from django.db.models import F, Count, Sum
 
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -130,7 +130,7 @@ class RestaurantMenuItem(models.Model):
 class OrderQuerySet(models.QuerySet):
     def with_total_price(self):
         return self.annotate(
-            total_price=F('items__quantity') * F('items__price')
+            total_price=Sum(F('items__quantity') * F('items__price'))
         )
 
     def with_available_restaurants(self):
