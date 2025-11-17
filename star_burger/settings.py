@@ -16,6 +16,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', True)
 YANDEX_API_KEY = env('YANDEX_API_KEY')
 ROLLBAR_TOKEN = env('ROLLBAR_TOKEN')
+DB_URL = env('DB_URL')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
@@ -88,8 +89,9 @@ MEDIA_URL = '/media/'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:////{0}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))
-    )
+            default=DB_URL,
+            conn_max_age=600
+        )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
