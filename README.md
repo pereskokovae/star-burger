@@ -152,6 +152,62 @@ Parcel будет следить за файлами в каталоге `bundle
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/5.2/ref/settings/#allowed-hosts)
 - `ROLLBAR_TOKEN` — секретный ключ от [Rollbar](https://app.rollbar.com/a/pereskokovae48/fix/items?isSnoozed=false&from=now+-+7d). Это сервис для мониторинга и отладки ошибок в реальном времени в программном обеспечении. 
 
+## Перенос данных с SQLite в PostgreSQL
+1. Подготовка данных из SQLite
+Если проект ранее использовал SQLite, сначала необходимо экспортировать данные.
+
+Активируйте виртуальное окружение:
+```sh
+source venv/bin/activate
+```
+Перенесите данные в файл формата `.json`
+```sh
+python manage.py dumpdata --natural-foreign --natural-primary --indent 2 > db_starburger.json
+```
+В результате в корне проекта появится файл `db_starburger.json` с полным содержимым старой базы.
+
+2. Создание пользователя и базы PostgreSQL
+
+Выполните команды под `вашим` пользователем:
+```sh
+sudo -u `your_user` psql
+```
+
+Создайте новую роль (пользователя) и базу данных:
+```sh
+CREATE ROLE your_new_user WITH LOGIN PASSWORD 'your_password';
+CREATE DATABASE starburger OWNER your_new_user ENCODING 'UTF8';
+GRANT ALL PRIVILEGES ON DATABASE starburger TO your_new_user;
+\q
+```
+
+3. Настройка переменных окружения
+
+В файл `.env` добавьте строку подключения:
+```sh
+DB_URL=postgresql://USER:PASSWORD@HOST:PORT/starburger
+```
+Проект использует dj_database_url, поэтому Django автоматически соберёт параметры подключения из DB_URL.
+
+4. Применение миграций
+
+После настройки переменных окружения выполните:
+```sh
+python manage.py migrate
+```
+В PostgreSQL будут созданы все таблицы, необходимые Django и приложениям проекта.
+
+5. Загрузка данных в PostgreSQL
+
+Загрузите данные из ранее созданного `db_starburger.json`:
+```sh
+python manage.py loaddata db.json
+```
+После успешной загрузки Django выведет сообщения вида:
+```
+Installed X object(s) from 1 fixture(s)
+```
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
