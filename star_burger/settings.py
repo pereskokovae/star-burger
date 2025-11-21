@@ -151,4 +151,4 @@ rollbar.init(
     environment=ROLLBAR['environment'],
     root=ROLLBAR['root'],
     code_version=ROLLBAR['code_version']
-
+)
