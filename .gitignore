@@ -142,3 +142,8 @@ dmypy.json
 cython_debug/
 
 .parcel-cache/
+
+.env.save
+db.json
+staticfiles/
+ystemctl list-timers
