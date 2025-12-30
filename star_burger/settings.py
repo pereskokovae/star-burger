@@ -20,6 +20,11 @@ DB_URL = env('DB_URL')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=["http://127.0.0.1", "http://localhost"]
+)
+
 INSTALLED_APPS = [
     'foodcartapp.apps.FoodcartappConfig',
     'places.apps.PlacesConfig',
