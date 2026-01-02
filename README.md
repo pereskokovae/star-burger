@@ -219,4 +219,34 @@ Installed X object(s) from 1 fixture(s)
 - В GitHub должен быть добавлен публичный ключ сервера
 - В проекте должен существовать .env с корректными переменными окружения
 
+## Быстрый старт (Docker Compose)
+
+1) Поднять сервисы
+```bash
+docker compose up -d --build
+```
+
+2) Применить миграции и собрать статику
+```bash
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py collectstatic --noinput
+```
+3) Создать суперпользователя (админка)
+```
+docker compose exec backend python manage.py createsuperuser
+```
+
+4) Переменные окружения
+Добавьте настройки базы данных для подключения
+```
+POSTGRES_DB=db_name
+POSTGRES_USER=user
+POSTGRES_PASSWORD=password
+```
+или
+```
+DB_URL=postgresql://POSTGRES_USER:POSTGRES_PASSWORD@db:5432/POSTGRES_DB
+```
+
+
 ## Рабочая версия сайта находится по [ссылке](https://devstarburger.ru/)
