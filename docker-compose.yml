@@ -3,8 +3,8 @@ version: "3.9"
 services:
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile.backend
     env_file:
       - .env
     depends_on:
@@ -17,7 +17,7 @@ services:
 
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile.frontend
     volumes:
       - bundles:/app/bundles
@@ -33,7 +33,7 @@ services:
 
   nginx:
     build:
-      context: .
+      context: ./nginx
       dockerfile: Dockerfile.nginx
     ports:
       - "80:80"
