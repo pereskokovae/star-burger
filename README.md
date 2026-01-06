@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 Определите переменную окружения `SECRET_KEY` и `YANDEX_API_KEY`. 
 `YANDEX_API_KEY`-это API-ключ Яндекса, который можно получить в [кабинете разработчика](https://developer.tech.yandex.ru/services). Он нужен для получения координат мест на карте.
-Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
+Создать файл `.env` в корне проекта и положите туда такой код:
 ```sh
 SECRET_KEY=django-insecure-0if40nf4nf93n4
 YANDEX_API_KEY=your_api-key
@@ -111,12 +111,14 @@ npm ci --dev
 Теперь запустите сборку фронтенда и не выключайте. Parcel будет работать в фоне и следить за изменениями в JS-коде:
 
 ```sh
+cd frontend
 ./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
 Если вы на Windows, то вам нужна та же команда, только с другими слешами в путях:
 
 ```sh
+cd frontend
 .\node_modules\.bin\parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
@@ -128,7 +130,7 @@ npm ci --dev
 
 Parcel будет следить за файлами в каталоге `bundles-src`. Сначала он прочитает содержимое `index.js` и узнает какие другие файлы он импортирует. Затем Parcel перейдёт в каждый из этих подключенных файлов и узнает что импортируют они. И так далее, пока не закончатся файлы. В итоге Parcel получит полный список зависимостей. Дальше он соберёт все эти сотни мелких файлов в большие бандлы `bundles/index.js` и `bundles/index.css`. Они полностью самодостаточны, и потому пригодны для запуска в браузере. Именно эти бандлы сервер отправит клиенту.
 
-Теперь если зайти на страницу  [http://127.0.0.1:8000/](http://127.0.0.1:8000/), то вместо пустой страницы вы увидите:
+Теперь если зайти на страницу  [http://127.0.0.1/](http://127.0.0.1/), то вместо пустой страницы вы увидите:
 
 ![](https://dvmn.org/filer/canonical/1594651900/687/)
 
@@ -142,6 +144,7 @@ Parcel будет следить за файлами в каталоге `bundle
 Собрать фронтенд:
 
 ```sh
+cd frontend
 ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
@@ -164,7 +167,7 @@ source venv/bin/activate
 ```sh
 python manage.py dumpdata --natural-foreign --natural-primary --indent 2 > db_starburger.json
 ```
-В результате в корне проекта появится файл `db_starburger.json` с полным содержимым старой базы.
+В результате в папке /backend проекта появится файл `db_starburger.json` с полным содержимым старой базы.
 
 2. Создание пользователя и базы PostgreSQL
 
@@ -201,7 +204,7 @@ python manage.py migrate
 
 Загрузите данные из ранее созданного `db_starburger.json`:
 ```sh
-python manage.py loaddata db.json
+python manage.py loaddata db_starburger.json
 ```
 После успешной загрузки Django выведет сообщения вида:
 ```
@@ -220,7 +223,7 @@ Installed X object(s) from 1 fixture(s)
 - В проекте должен существовать .env с корректными переменными окружения
 
 ## Быстрый старт (Docker Compose)
-
+Запускайте команды из корня репозитория
 1) Поднять сервисы
 ```bash
 docker compose up -d --build
@@ -247,6 +250,5 @@ POSTGRES_PASSWORD=password
 ```
 DB_URL=postgresql://POSTGRES_USER:POSTGRES_PASSWORD@db:5432/POSTGRES_DB
 ```
-
 
 ## Рабочая версия сайта находится по [ссылке](https://devstarburger.ru/)
